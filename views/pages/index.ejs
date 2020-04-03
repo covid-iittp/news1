@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News Server | Hydros Lab IITTP</title>
+</head>
+
+<body>
+    <button onclick="f1()">Click here for the news</button>
+    <p id="p1">Content will be Printed Here </p>
+    <script>
+        function f1() 
+        {  
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) 
+            {
+              var doop = JSON.parse(this.responseText).message 
+              console.log(doop.articles)
+              document.getElementById('p1').innerHTML = JSON.stringify(doop.articles)
+            }
+          };
+          xhttp.open("POST", "/", true);
+          xhttp.setRequestHeader('Content-type', "application/x-www-form-urlencoded")
+          var str = "hi"
+          console.log(str);
+          xhttp.send('link='+str);
+        }
+        </script>    
+</body>
+</html>

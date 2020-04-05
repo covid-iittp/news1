@@ -3,6 +3,8 @@ var path = require('path')
 var PORT = process.env.PORT || 6772
 var bodyParser = require("body-parser")
 var cors = require('cors')
+var sqlite3 = require('sqlite3').verbose();
+var db = new sqlite3.Database('old_db.db');
 express()
   .use(express.static(path.join(__dirname, 'public')))
   .set('views', path.join(__dirname, 'views'))
@@ -26,7 +28,7 @@ express()
     var month1 = DATE.getMonth() + 1
     var year1 = DATE.getFullYear()
     var prev = DATE
-    prev.setDate(DATE.getDate() - 1)
+    prev.setDate(DATE.getDate() - 30)
     var date2 = prev.getDate()
     var month2 = prev.getMonth() + 1
     var year2 = prev.getFullYear()
@@ -43,9 +45,31 @@ express()
         from:today1,
         to:today2,
         domains:'thehindubusinessline.com',
-    
     }).then(response => {
-        res.json({ message: response });
-      });
+        var newss = response
+        var doop = newss.articles
+        var c = 0
+        db.serialize(function(){
+          res.json({ message: response });
+          db.run("CREATE TABLE record1 (author TEXT,  title TEXT, description TEXT, url TEXT, urlToImage TEXT, publishedAt TEXT)");
+          var stmt = db.prepare("INSERT INTO record1 VALUES (?,?,?,?,?,?)");
+            for(c=0;c<doop.length;c++)
+              {
+				  console.log(doop[c].title)
+          if(doop[c].title.includes('Corona') || doop[c].title.includes('corona') || 
+          doop[c].title.includes('Covid') || doop[c].title.includes('covid') || 
+          doop[c].title.includes('COVID') || doop[c].title.includes('Flood risks') || 
+          doop[c].title.includes('Virus') || doop[c].title.includes('virus'))
+                {
+					        stmt.run(doop[c].author,doop[c].title,doop[c].description,doop[c].url,doop[c].urlToImage,doop[c].publishedAt);
+                }
+              }
+          stmt.finalize();
+          db.each("SELECT title, publishedAt FROM record1",function(err,row){
+            console.log("News: "+row.title,row.publishedAt);
+          })
+        })
+        db.close()
+      });  
     })
     .listen(PORT, () => console.log(`Listening on ${ PORT }`))
